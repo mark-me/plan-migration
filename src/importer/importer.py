@@ -5,14 +5,35 @@ import polars as pl
 
 class ProductFile:
     def __init__(self, path_file: Path):
+        """Initializes the ProductFile with product data from an Excel file.
+
+        Loads the product data into a DataFrame for further processing and analysis.
+
+        Args:
+            path_file (Path): Path to the Excel file containing product data.
+        """
         self.df_products = pl.read_excel(source=path_file)
 
     @property
     def products(self) -> pl.DataFrame:
+        """Returns a DataFrame containing product information.
+
+        The DataFrame includes the product ID, name, and status for each product.
+
+        Returns:
+            pl.DataFrame: DataFrame with columns 'id_product', 'name_product', and 'status'.
+        """
         return self.df_products.select(["id_product", "name_product", "status"])
 
     @property
     def product_sources(self) -> pl.DataFrame:
+        """Returns a DataFrame with products and their associated source systems.
+
+        The DataFrame expands the source systems column so each row represents a single product-source relationship.
+
+        Returns:
+            pl.DataFrame: DataFrame with products and their corresponding source systems.
+        """
         df = (
             self.df_products.with_columns(pl.col("source_systems").str.split("|"))
             .explode("source_systems")
@@ -22,6 +43,13 @@ class ProductFile:
 
     @property
     def sources(self) -> pl.DataFrame:
+        """Returns a DataFrame containing unique source systems.
+
+        The DataFrame includes a single column with all unique source system names extracted from the products data.
+
+        Returns:
+            pl.DataFrame: DataFrame with a single column 'source_systems' listing unique sources.
+        """
         df = (
             self.df_products.with_columns(pl.col("source_systems").str.split("|"))
             .explode("source_systems")
