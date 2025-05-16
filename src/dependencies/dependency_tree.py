@@ -224,3 +224,13 @@ class PlanningTree:
                 for dependency in task.get("depends_on", [])
             )
         return dependencies
+
+    def get_dependencies_total(self) -> ig.Graph:
+        vertices = (
+            list(self.sources.values())
+            + list(self.products.values())
+            + list(self.tasks.values())
+        )
+        edges = list(self.edges)
+        graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
+        return graph
