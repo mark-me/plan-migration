@@ -39,7 +39,7 @@ class PlanningTree:
         self.products = {}
         self.tasks = {}
         self.edges = []
-        with open("src/build_tree/tasks.json") as json_data:
+        with open("tasks.json") as json_data:
             self.template_tasks = json.load(json_data)
 
     def add_product_sources(self, df_product_sources: pl.DataFrame) -> None:
@@ -64,7 +64,7 @@ class PlanningTree:
             tasks = self._fill_task_template(id_source=id_source, id_product=id_product)
             self._add_edges_source_tasks(id_source=id_source, tasks=tasks)
             self._add_edges_product_tasks(id_product=id_product, tasks=tasks)
-            self.tasks.update({task["id_task"]: task for task in tasks})
+            self._add_tasks(tasks=tasks)
             self._add_edges(self._extract_dependencies(tasks=tasks))
 
     def _add_edges(self, edges: List[dict]) -> None:
@@ -97,13 +97,14 @@ class PlanningTree:
         sources = (
             df_product_sources.filter(pl.col("source_systems").is_not_null())
             .select("source_systems")
-            .rename({"source_systems": "source_system"})
+            .rename({"source_systems": "name"})
             .unique()
             .to_dicts()
         )
         for source in sources:
+            source["task_type"] = "SOURCE"
             source["type"] = VertexType.SOURCE.name
-        self.sources = {source["source_system"]: source for source in sources}
+        self.sources = {source["name"]: source for source in sources}
 
     def _add_products(self, df_product_sources: pl.DataFrame) -> None:
         """Adds product nodes to the planning tree from a DataFrame.
@@ -115,10 +116,20 @@ class PlanningTree:
         """
         products = (
             df_product_sources.select(["id_product", "name_product", "status"])
+            .rename({"id_product": "name"})
             .unique()
             .to_dicts()
         )
-        self.products = {product["id_product"]: product for product in products}
+        for product in products:
+            product["type"] = VertexType.PRODUCT.name
+        self.products = {product["name"]: product for product in products}
+
+    def _add_tasks(self, tasks: List[dict]) -> None:
+        task_nodes = [{**task, "name": task["id_task"]} for task in tasks]
+        for task in task_nodes:
+            task["type_task"] = task["type"]
+            task["type"] = VertexType.TASK.name
+        self.tasks.update({task["name"]: task for task in task_nodes})
 
     def _add_edges_source_product(self, df_product_sources: pl.DataFrame) -> List[dict]:
         """Creates and adds edges between source systems and products in the planning tree.
@@ -151,8 +162,13 @@ class PlanningTree:
             tasks (List[dict]): List of task dictionaries to connect to the source.
         """
         tasks_source = [
-            {"source": task["id_task"], "target": id_source, "type": EdgeType.SOURCE_TASK.name}
-            for task in tasks if task["type"] == "SOURCE"
+            {
+                "source": id_source,
+                "target": task["id_task"],
+                "type": EdgeType.SOURCE_TASK.name,
+            }
+            for task in tasks
+            if task["type"] == "SOURCE"
         ]
         self._add_edges(tasks_source)
 
@@ -166,8 +182,13 @@ class PlanningTree:
             tasks (List[dict]): List of task dictionaries to connect to the product.
         """
         tasks_product = [
-            {"source": task["id_task"], "target": id_product, "type": EdgeType.PRODUCT_TASK.name}
-            for task in tasks if task["type"] == "PRODUCT"
+            {
+                "source": task["id_task"],
+                "target": id_product,
+                "type": EdgeType.PRODUCT_TASK.name,
+            }
+            for task in tasks
+            if task["type"] == "PRODUCT"
         ]
         self._add_edges(tasks_product)
 
@@ -231,6 +252,10 @@ class PlanningTree:
             + list(self.products.values())
             + list(self.tasks.values())
         )
-        edges = list(self.edges)
+        edges = [
+            edge
+            for edge in self.edges
+            if edge["type"] not in [EdgeType.SOURCE_PRODUCT.name]
+        ]
         graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
         return graph
