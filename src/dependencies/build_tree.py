@@ -42,25 +42,6 @@ class PlanningTree:
         with open("src/build_tree/tasks.json") as json_data:
             self.template_tasks = json.load(json_data)
 
-    def _add_edges(self, edges: List[dict]) -> None:
-        """Adds new edges to the planning tree and ensures all edges are unique.
-
-        Extends the internal edge list with new edges and removes any duplicates based on edge content.
-
-        Args:
-            edges (List[dict]): List of edge dictionaries to add to the planning tree.
-        """
-        self.edges.extend(edges)
-        seen = set()
-        unique = []
-        for d in self.edges:
-            # Convert the dictionary to a tuple of key-value pairs, sorted to ensure order consistency
-            dict_tuple = tuple(sorted(d.items()))
-            if dict_tuple not in seen:
-                seen.add(dict_tuple)
-                unique.append(d)
-        self.edges = unique
-
     def add_product_sources(self, df_product_sources: pl.DataFrame) -> None:
         """Adds product and source nodes, edges, and tasks to the planning tree from a DataFrame.
 
@@ -85,6 +66,25 @@ class PlanningTree:
             self._add_edges_product_tasks(id_product=id_product, tasks=tasks)
             self.tasks.update({task["id_task"]: task for task in tasks})
             self._add_edges(self._extract_dependencies(tasks=tasks))
+
+    def _add_edges(self, edges: List[dict]) -> None:
+        """Adds new edges to the planning tree and ensures all edges are unique.
+
+        Extends the internal edge list with new edges and removes any duplicates based on edge content.
+
+        Args:
+            edges (List[dict]): List of edge dictionaries to add to the planning tree.
+        """
+        self.edges.extend(edges)
+        seen = set()
+        unique = []
+        for d in self.edges:
+            # Convert the dictionary to a tuple of key-value pairs, sorted to ensure order consistency
+            dict_tuple = tuple(sorted(d.items()))
+            if dict_tuple not in seen:
+                seen.add(dict_tuple)
+                unique.append(d)
+        self.edges = unique
 
     def _add_sources(self, df_product_sources: pl.DataFrame) -> None:
         """Adds source system nodes to the planning tree from a DataFrame.
