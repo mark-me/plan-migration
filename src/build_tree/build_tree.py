@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from typing import List
 
 import igraph as ig
 import polars as pl
@@ -28,7 +29,6 @@ class EdgeType(Enum):
 
 
 class PlanningTree:
-
     def __init__(self):
         """Initializes a new PlanningTree instance.
 
@@ -46,25 +46,33 @@ class PlanningTree:
         Args:
             df_product_sources (pl.DataFrame): DataFrame containing product and source information.
         """
-        self._add_sources(
-            sources=df_product_sources.select("source_systems").unique().to_dicts()
-        )
-        self._add_products(
-            products=(
-                df_product_sources.select(["id_product", "name_product", "status"])
-                .unique()
-                .to_dicts()
+        # Clean 'source_systems': drop nulls and filter out non-hashable/complex types
+        cleaned_sources = (
+            df_product_sources.filter(pl.col("source_systems").is_not_null())
+            .filter(
+                pl.col("source_systems").is_utf8() | pl.col("source_systems").is_int()
             )
+            .select("source_systems")
+            .unique()
+            .to_dicts()
         )
-        self.edges = (
+        self._add_sources(sources=cleaned_sources)
+        cleaned_products = (
+            df_product_sources.select(["id_product", "name_product", "status"])
+            .unique()
+            .to_dicts()
+        )
+        self._add_products(products=cleaned_products)
+        self.edges.extend(
             df_product_sources.select(["source_systems", "id_product"])
             .rename({"source_systems": "source", "id_product": "target"})
             .with_columns(pl.lit(EdgeType.SOURCE_PRODUCT.name).alias("type"))
-        ).to_dicts()
+            .to_dicts()
+        )
 
         self.create_task_dependencies()
 
-    def _add_sources(self, sources: dict) -> None:
+    def _add_sources(self, sources: List[dict]) -> None:
         """Adds source nodes to the planning tree from a dictionary.
 
         Updates the internal sources dictionary and triggers creation of source tasks.
@@ -75,7 +83,7 @@ class PlanningTree:
         self.sources = {source["source_systems"]: source for source in sources}
         self.create_source_tasks()
 
-    def _add_products(self, products: dict) -> None:
+    def _add_products(self, products: List[dict]) -> None:
         """Adds product nodes to the planning tree from a dictionary.
 
         Updates the internal products dictionary and triggers creation of product tasks.
