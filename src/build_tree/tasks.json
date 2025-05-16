@@ -1,0 +1,56 @@
+[
+    {
+        "id_task": "1",
+        "description": "Teradata to Silver-layer",
+        "type": "SOURCE",
+        "depends_on": []
+    },
+    {
+        "id_task": "2",
+        "description": "Teradata to Source-layer",
+        "type": "SOURCE",
+        "depends_on": [
+            "1"
+        ]
+    },
+    {
+        "id_task": "3",
+        "description": "Source to Silver-layer",
+        "type": "SOURCE",
+        "depends_on": [
+            "2"
+        ]
+    },
+    {
+        "id_task": "4",
+        "description": "Source to Source-layer",
+        "type": "SOURCE",
+        "depends_on": [
+            "3"
+        ]
+    },
+    {
+        "id_task": "5",
+        "description": "Rewire product",
+        "type": "PRODUCT",
+        "depends_on": [
+            "2"
+        ]
+    },
+    {
+        "id_task": "6",
+        "description": "Launch product",
+        "type": "PRODUCT",
+        "depends_on": [
+            "2"
+        ]
+    },
+    {
+        "id_task": "7",
+        "description": "Turn off FTD",
+        "type": "SOURCE",
+        "depends_on": [
+            "6"
+        ]
+    }
+]

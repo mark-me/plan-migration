@@ -1,5 +1,6 @@
+import json
 from enum import Enum, auto
-from typing import List
+from typing import List, Dict
 
 import igraph as ig
 import polars as pl
@@ -36,73 +37,190 @@ class PlanningTree:
         """
         self.sources = {}
         self.products = {}
+        self.tasks = {}
         self.edges = []
+        with open("src/build_tree/tasks.json") as json_data:
+            self.template_tasks = json.load(json_data)
 
-    def add_product_sources(self, df_product_sources: pl.DataFrame):
-        """Adds product and source nodes to the planning tree from a DataFrame.
+    def _add_edges(self, edges: List[dict]) -> None:
+        """Adds new edges to the planning tree and ensures all edges are unique.
 
-        This method updates the internal sources, products, and edges based on the provided product-source relationships.
+        Extends the internal edge list with new edges and removes any duplicates based on edge content.
+
+        Args:
+            edges (List[dict]): List of edge dictionaries to add to the planning tree.
+        """
+        self.edges.extend(edges)
+        seen = set()
+        unique = []
+        for d in self.edges:
+            # Convert the dictionary to a tuple of key-value pairs, sorted to ensure order consistency
+            dict_tuple = tuple(sorted(d.items()))
+            if dict_tuple not in seen:
+                seen.add(dict_tuple)
+                unique.append(d)
+        self.edges = unique
+
+    def add_product_sources(self, df_product_sources: pl.DataFrame) -> None:
+        """Adds product and source nodes, edges, and tasks to the planning tree from a DataFrame.
+
+        This method updates the planning tree with new sources, products, their relationships, and associated
+        tasks based on the provided product-source data.
 
         Args:
             df_product_sources (pl.DataFrame): DataFrame containing product and source information.
         """
-        # Clean 'source_systems': drop nulls and filter out non-hashable/complex types
-        cleaned_sources = (
+        # Create source system nodes
+        self._add_sources(df_product_sources=df_product_sources)
+        # Create product nodes
+        self._add_products(df_product_sources=df_product_sources)
+        # Create edges between source systems and products
+        edges = self._add_edges_source_product(df_product_sources=df_product_sources)
+        # Add tasks
+        for edge in edges:
+            id_product = edge["target"]
+            id_source = edge["source"]
+            tasks = self._fill_task_template(id_source=id_source, id_product=id_product)
+            self._add_edges_source_tasks(id_source=id_source, tasks=tasks)
+            self._add_edges_product_tasks(id_product=id_product, tasks=tasks)
+            self.tasks.update({task["id_task"]: task for task in tasks})
+            self._add_edges(self._extract_dependencies(tasks=tasks))
+
+    def _add_sources(self, df_product_sources: pl.DataFrame) -> None:
+        """Adds source system nodes to the planning tree from a DataFrame.
+
+        Updates the internal sources dictionary with unique source systems extracted from the provided DataFrame.
+
+        Args:
+            df_product_sources (pl.DataFrame): DataFrame containing product and source information.
+        """
+        sources = (
             df_product_sources.filter(pl.col("source_systems").is_not_null())
-            .filter(
-                pl.col("source_systems").is_utf8() | pl.col("source_systems").is_int()
-            )
             .select("source_systems")
+            .rename({"source_systems": "source_system"})
             .unique()
             .to_dicts()
         )
-        self._add_sources(sources=cleaned_sources)
-        cleaned_products = (
+        for source in sources:
+            source["type"] = VertexType.SOURCE.name
+        self.sources = {source["source_system"]: source for source in sources}
+
+    def _add_products(self, df_product_sources: pl.DataFrame) -> None:
+        """Adds product nodes to the planning tree from a DataFrame.
+
+        Updates the internal products dictionary with unique products extracted from the provided DataFrame.
+
+        Args:
+            df_product_sources (pl.DataFrame): DataFrame containing product and source information.
+        """
+        products = (
             df_product_sources.select(["id_product", "name_product", "status"])
             .unique()
             .to_dicts()
         )
-        self._add_products(products=cleaned_products)
-        self.edges.extend(
+        self.products = {product["id_product"]: product for product in products}
+
+    def _add_edges_source_product(self, df_product_sources: pl.DataFrame) -> List[dict]:
+        """Creates and adds edges between source systems and products in the planning tree.
+
+        Extracts unique source-product relationships from the DataFrame and adds them as edges to the planning tree.
+
+        Args:
+            df_product_sources (pl.DataFrame): DataFrame containing product and source information.
+
+        Returns:
+            List[dict]: List of edge dictionaries representing source-product relationships.
+        """
+        edges = (
             df_product_sources.select(["source_systems", "id_product"])
+            .unique()
             .rename({"source_systems": "source", "id_product": "target"})
             .with_columns(pl.lit(EdgeType.SOURCE_PRODUCT.name).alias("type"))
             .to_dicts()
         )
+        self._add_edges(edges)
+        return edges
 
-        self.create_task_dependencies()
+    def _add_edges_source_tasks(self, id_source: str, tasks: List[dict]) -> None:
+        """Adds edges between source tasks and the specified source node in the planning tree.
 
-    def _add_sources(self, sources: List[dict]) -> None:
-        """Adds source nodes to the planning tree from a dictionary.
-
-        Updates the internal sources dictionary and triggers creation of source tasks.
-
-        Args:
-            sources (dict): Dictionary containing source system information.
-        """
-        self.sources = {source["source_systems"]: source for source in sources}
-        self.create_source_tasks()
-
-    def _add_products(self, products: List[dict]) -> None:
-        """Adds product nodes to the planning tree from a dictionary.
-
-        Updates the internal products dictionary and triggers creation of product tasks.
+        Creates and adds edges for all tasks of type 'SOURCE' that are associated with the given source identifier.
 
         Args:
-            products (dict): Dictionary containing product information.
+            id_source (str): Identifier for the source system.
+            tasks (List[dict]): List of task dictionaries to connect to the source.
         """
-        self.products = {product["id_product"]: product for product in products}
-        self.create_product_tasks()
+        tasks_source = [
+            {"source": task["id_task"], "target": id_source, "type": EdgeType.SOURCE_TASK.name}
+            for task in tasks if task["type"] == "SOURCE"
+        ]
+        self._add_edges(tasks_source)
 
-    def create_source_tasks(self) -> None:
-        """Creates task nodes associated with each source in the planning tree.
+    def _add_edges_product_tasks(self, id_product: str, tasks: List[dict]) -> None:
+        """Adds edges between product tasks and the specified product node in the planning tree.
 
-        This method is intended to generate and add task nodes for all sources currently in the tree.
+        Creates and adds edges for all tasks of type 'PRODUCT' that are associated with the given product identifier.
+
+        Args:
+            id_product (str): Identifier for the product.
+            tasks (List[dict]): List of task dictionaries to connect to the product.
         """
-        pass
+        tasks_product = [
+            {"source": task["id_task"], "target": id_product, "type": EdgeType.PRODUCT_TASK.name}
+            for task in tasks if task["type"] == "PRODUCT"
+        ]
+        self._add_edges(tasks_product)
 
-    def create_product_tasks(self) -> None:
-        pass
+    def _fill_task_template(self, id_source: str, id_product: int) -> List[dict]:
+        """Fills a task template with specific source and product identifiers.
 
-    def create_task_dependencies(self) -> None:
-        pass
+        Generates a list of task dictionaries with updated IDs and dependencies for a given source and product.
+
+        Args:
+            id_source (str): Identifier for the source system.
+            id_product (int): Identifier for the product.
+
+        Returns:
+            List[dict]: List of task dictionaries with updated IDs and dependencies.
+        """
+        filled_template = []
+        id_mapping = {}
+
+        # First pass to build id_mapping
+        for task in self.template_tasks:
+            prefix = id_source if task["type"] == "SOURCE" else str(id_product)
+            new_id = f"{prefix}_{task['id_task']}"
+            id_mapping[task["id_task"]] = new_id
+
+        # Second pass to update ids and dependencies
+        for task in self.template_tasks:
+            new_task = task.copy()
+            prefix = id_source if new_task["type"] == "SOURCE" else str(id_product)
+            new_task["id_task"] = id_mapping[new_task["id_task"]]
+            new_task["depends_on"] = [id_mapping[dep] for dep in new_task["depends_on"]]
+            filled_template.append(new_task)
+
+        return filled_template
+
+    def _extract_dependencies(self, tasks: List[dict]) -> List[Dict[str, str]]:
+        """Extracts task dependency edges from a list of task dictionaries.
+
+        Generates a list of edge dictionaries representing dependencies between tasks based on their 'depends_on' fields.
+
+        Args:
+            tasks (List[dict]): List of task dictionaries to extract dependencies from.
+
+        Returns:
+            List[Dict[str, str]]: List of edge dictionaries representing task dependencies.
+        """
+        dependencies = []
+        for task in tasks:
+            dependencies.extend(
+                {
+                    "source": dependency,
+                    "target": task["id_task"],
+                    "type": EdgeType.TASK_DEPENDENCY.name,
+                }
+                for dependency in task.get("depends_on", [])
+            )
+        return dependencies
