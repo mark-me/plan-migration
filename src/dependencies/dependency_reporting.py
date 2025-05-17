@@ -104,7 +104,7 @@ class PlanningReport(PlanningTree):
                 elif node["status"] == "commited":
                     node["color"] = "royalblue"
                 else:
-                    node["color"] = "grey"
+                    node["color"] = "darkgrey"
         return dag
 
     def plot_graph_html(self, dag: ig.Graph, file_html: str) -> None:
@@ -225,6 +225,13 @@ class PlanningReport(PlanningTree):
         dag = self._set_visual_status(dag=dag)
         self.plot_graph_html(dag=dag, file_html=file_html)
 
+    def get_tasks(self) -> pl.DataFrame:
+        lst_tasks = list(self.tasks.values())
+        df_tasks = pl.from_dicts(lst_tasks)
+        if "status" in df_tasks.columns:
+            df_tasks = df_tasks.with_columns(pl.col("status").fill_null("waiting"))
+        return df_tasks
+
     def export_tasks(self, file_xlsx: str) -> None:
         """Exports the list of tasks to an Excel file.
 
@@ -234,6 +241,5 @@ class PlanningReport(PlanningTree):
         Returns:
             None
         """
-        lst_tasks = list(self.tasks.values())
-        df_tasks = pl.from_dicts(lst_tasks)
+        df_tasks = self.get_tasks()
         df_tasks.write_excel(file_xlsx)
