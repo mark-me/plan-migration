@@ -192,7 +192,35 @@ class PlanningReport(PlanningTree):
         self.plot_graph_html(dag=dag, file_html=file_html)
 
     def plot_graph_product_status(self, id_product: int, file_html: str) -> None:
+        """Plots the status graph for a specific product and saves it as an HTML file.
+
+        Builds the product's dependency graph, sets visualization and status attributes, and exports the result to an HTML file.
+
+        Args:
+            id_product (int): The identifier of the product to plot.
+            file_html (str): The path to the HTML file where the plot will be saved.
+
+        Returns:
+            None
+        """
         dag = self.get_product_tasks(id_product=id_product)
+        dag = self._set_visual_attributes(dag=dag)
+        dag = self._set_visual_status(dag=dag)
+        self.plot_graph_html(dag=dag, file_html=file_html)
+
+    def plot_graph_source_status(self, id_source: str, file_html: str) -> None:
+        """Plots the status graph for a specific source and saves it as an HTML file.
+
+        Builds the source's dependency graph, sets visualization and status attributes, and exports the result to an HTML file.
+
+        Args:
+            id_source (str): The identifier of the source to plot.
+            file_html (str): The path to the HTML file where the plot will be saved.
+
+        Returns:
+            None
+        """
+        dag = self.get_source_tasks(id_source=id_source)
         dag = self._set_visual_attributes(dag=dag)
         dag = self._set_visual_status(dag=dag)
         self.plot_graph_html(dag=dag, file_html=file_html)

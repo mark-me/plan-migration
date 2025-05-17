@@ -345,3 +345,11 @@ class PlanningTree:
         vs_delete = [i for i in dag.vs.indices if i not in vs]
         dag.delete_vertices(vs_delete)
         return dag
+
+    def get_source_tasks(self, id_source: str) -> ig.Graph:
+        dag = self.get_product_source_tasks()
+        vx_source = dag.vs.select(name=id_source)[0]
+        vs = dag.subcomponent(vx_source, mode="out")
+        vs_delete = [i for i in dag.vs.indices if i not in vs]
+        dag.delete_vertices(vs_delete)
+        return dag
