@@ -126,9 +126,18 @@ class PlanningTree:
         self.products = {product["name"]: product for product in products}
 
     def _add_tasks(self, tasks: List[dict]) -> None:
+        """Adds task nodes to the planning tree from a list of task dictionaries.
+
+        Updates the internal tasks dictionary with new task nodes, setting their type and type_task attributes.
+
+        Args:
+            tasks (List[dict]): List of task dictionaries to add to the planning tree.
+
+        Returns:
+            None
+        """
         task_nodes = [{**task, "name": task["id_task"]} for task in tasks]
         for task in task_nodes:
-            task["type_task"] = task["type"]
             task["type"] = VertexType.TASK.name
         self.tasks.update({task["name"]: task for task in task_nodes})
 
@@ -169,7 +178,7 @@ class PlanningTree:
                 "type": EdgeType.SOURCE_TASK.name,
             }
             for task in tasks
-            if task["type"] == "SOURCE"
+            if task["type_task"] == "SOURCE"
         ]
         self._add_edges(tasks_source)
 
@@ -189,7 +198,7 @@ class PlanningTree:
                 "type": EdgeType.PRODUCT_TASK.name,
             }
             for task in tasks
-            if task["type"] == "PRODUCT"
+            if task["type_task"] == "PRODUCT"
         ]
         self._add_edges(tasks_product)
 
@@ -210,16 +219,18 @@ class PlanningTree:
 
         # First pass to build id_mapping
         for task in self.template_tasks:
-            prefix = id_source if task["type"] == "SOURCE" else str(id_product)
+            prefix = id_source if task["type_task"] == "SOURCE" else str(id_product)
             new_id = f"{prefix}_{task['id_task']}"
             id_mapping[task["id_task"]] = new_id
 
         # Second pass to update ids and dependencies
         for task in self.template_tasks:
             new_task = task.copy()
-            prefix = id_source if new_task["type"] == "SOURCE" else str(id_product)
             new_task["id_task"] = id_mapping[new_task["id_task"]]
             new_task["depends_on"] = [id_mapping[dep] for dep in new_task["depends_on"]]
+            new_task["worked_on"] = (
+                id_source if new_task["type_task"] == "SOURCE" else str(id_product)
+            )
             filled_template.append(new_task)
 
         return filled_template
@@ -270,7 +281,6 @@ class PlanningTree:
         """
         vertices = [{**task, "name": task["id_task"]} for task in self.template_tasks]
         for vx in vertices:
-            vx["type_task"] = vx["type"]
             vx["type"] = VertexType.TASK.name
         edges = []
         for task in self.template_tasks:
