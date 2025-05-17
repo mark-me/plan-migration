@@ -329,5 +329,19 @@ class PlanningTree:
         return graph
 
     def get_product_tasks(self, id_product: int) -> ig.Graph:
-        dag = self.get_product_source_tasks()
+        """Returns a subgraph containing the specified product and all its dependencies.
 
+        Extracts and returns a directed graph of the product node and all nodes that are upstream dependencies.
+
+        Args:
+            id_product (int): The identifier of the product node to extract dependencies for.
+
+        Returns:
+            ig.Graph: A directed igraph Graph object containing the product and its dependencies.
+        """
+        dag = self.get_product_source_tasks()
+        vx_product = dag.vs.select(name=id_product)[0]
+        vs = dag.subcomponent(vx_product, mode="in")
+        vs_delete = [i for i in dag.vs.indices if i not in vs]
+        dag.delete_vertices(vs_delete)
+        return dag

@@ -50,7 +50,7 @@
         "description": "Turn off FTD",
         "type": "SOURCE",
         "depends_on": [
-            "6", "4"
+            "6"
         ]
     }
 ]
