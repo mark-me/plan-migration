@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from dash import Dash, dcc, html
+from dashboard import Dash, dcc, html
 import plotly.express as px
 import polars as pl
 
