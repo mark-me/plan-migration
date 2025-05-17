@@ -15,12 +15,12 @@ class PlanningReport(PlanningTree):
         self.node_type_shape = {
             VertexType.SOURCE.name: "database",
             VertexType.TASK.name: "square",
-            VertexType.PRODUCT.name: "hexagon"
+            VertexType.PRODUCT.name: "hexagon",
         }
         self.node_type_color = {
             VertexType.SOURCE.name: "#fbed8f",
             VertexType.TASK.name: "#73c4e5",
-            VertexType.PRODUCT.name: "#8962ad"
+            VertexType.PRODUCT.name: "#8962ad",
         }
 
     def _create_output_dir(self, file_path: str) -> None:
@@ -115,7 +115,7 @@ class PlanningReport(PlanningTree):
             file_html_out (str): file path that the result should be written to
         """
         self._create_output_dir(file_path=file_html)
-        net = Network("900px", "1917px", directed=True, layout=True)
+        net = Network("900px", "1917px", directed=True, layout=True, neighborhood_highlight=True)
         dag = self._igraph_to_networkx(graph=dag)
         net.from_nx(dag)
         net.options.layout.hierarchical.sortMethod = "directed"
