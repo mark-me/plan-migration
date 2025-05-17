@@ -77,8 +77,8 @@ class PlanningReport(PlanningTree):
             ig.Graph: The graph with attributes set for pyvis visualization.
         """
         for node in dag.vs:
-            node["shape"] = self.node_type_shape[node["type"]]
             node["shadow"] = True
+            node["shape"] = self.node_type_shape[node["type"]]
             if node["type"] == VertexType.TASK.name:
                 node["color"] = self.node_type_color[node["type_task"]]
             else:
