@@ -110,6 +110,11 @@ class PlanningReport(PlanningTree):
         dag = self._set_visual_attributes(dag=dag)
         self.plot_graph_html(dag=dag, file_html=file_html)
 
+    def plot_source_products(self, file_html: str) -> None:
+        dag = self.get_product_sources()
+        dag = self._set_visual_attributes(dag=dag)
+        self.plot_graph_html(dag=dag, file_html=file_html)
+
     def plot_graph_total(self, file_html: str) -> None:
         """Plot the total graph and save it to an HTML file.
 

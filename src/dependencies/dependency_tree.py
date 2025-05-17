@@ -264,6 +264,21 @@ class PlanningTree:
         graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
         return graph
 
+    def get_product_sources(self) -> ig.Graph:
+        vertices = list(self.sources.values()) + list(self.products.values())
+        edges = [
+            edge
+            for edge in self.edges
+            if edge["type"]
+            not in [
+                EdgeType.TASK_DEPENDENCY.name,
+                EdgeType.PRODUCT_TASK.name,
+                EdgeType.SOURCE_TASK.name,
+            ]
+        ]
+        graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
+        return graph
+
     def get_dependencies_total(self) -> ig.Graph:
         vertices = (
             list(self.sources.values())
