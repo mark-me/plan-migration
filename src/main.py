@@ -5,9 +5,9 @@ from importers import StatusFile
 from dependencies import PlanningReport
 
 if __name__ == "__main__":
-    product_file = ProductFile(path_file=Path("product_sources.xlsx"))
-    status_file = StatusFile(path_file=Path("task_status.xlsx"))
-    plan_report = PlanningReport()
+    product_file = ProductFile(path_file=Path("data/product_sources.xlsx"))
+    status_file = StatusFile(path_file=Path("data/task_status.xlsx"))
+    plan_report = PlanningReport(file_task_template=Path("data/tasks.json"))
     plan_report.add_product_sources(df_product_sources=product_file.product_sources)
     plan_report.plot_tasks_template(file_html="output/tasks_template.html")
     plan_report.plot_source_products(file_html="output/source_products.html")

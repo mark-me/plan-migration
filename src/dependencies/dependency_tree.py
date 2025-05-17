@@ -1,6 +1,7 @@
 import json
 from enum import Enum, auto
-from typing import List, Dict
+from pathlib import Path
+from typing import Dict, List
 
 import igraph as ig
 import polars as pl
@@ -30,7 +31,7 @@ class EdgeType(Enum):
 
 
 class PlanningTree:
-    def __init__(self):
+    def __init__(self, file_task_template: Path):
         """Initializes a new PlanningTree instance.
 
         Sets up empty dictionaries for sources and products, and an empty list for edges.
@@ -39,7 +40,7 @@ class PlanningTree:
         self.products = {}
         self.tasks = {}
         self.edges = []
-        with open("tasks.json") as json_data:
+        with open(file_task_template) as json_data:
             self.template_tasks = json.load(json_data)
 
     def add_product_sources(self, df_product_sources: pl.DataFrame) -> None:

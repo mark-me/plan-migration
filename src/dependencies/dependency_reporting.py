@@ -6,12 +6,12 @@ import networkx as nx
 import polars as pl
 from pyvis.network import Network
 
-from .dependency_tree import PlanningTree, VertexType, EdgeType
+from .dependency_tree import PlanningTree, VertexType
 
 
 class PlanningReport(PlanningTree):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, file_task_template: Path):
+        super().__init__(file_task_template=file_task_template)
         self.node_type_shape = {
             VertexType.SOURCE.name: "database",
             VertexType.TASK.name: "square",
