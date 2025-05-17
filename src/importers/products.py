@@ -58,9 +58,3 @@ class ProductFile:
             .unique()
         )
         return df
-
-
-if __name__ == "__main__":
-    product_file = ProductFile(Path("product_sources.xlsx"))
-    df = product_file.product_sources
-    df

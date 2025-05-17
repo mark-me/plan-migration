@@ -246,7 +246,27 @@ class PlanningTree:
             )
         return dependencies
 
+    def add_task_statuses(self, df_task_status: pl.DataFrame) -> None:
+        """Updates the status of tasks in the planning tree from a DataFrame.
+
+        This method assigns status values to tasks based on the provided task status data.
+
+        Args:
+            df_task_status (pl.DataFrame): DataFrame containing task status information.
+        """
+        task_statuses = df_task_status.to_dicts()
+        for task_status in task_statuses:
+            task = task_status["task"]
+            self.tasks[task]["status"] = task_status["status"]
+
     def get_tasks_template(self) -> ig.Graph:
+        """Creates and returns a template graph of tasks and their dependencies.
+
+        This method generates a directed graph representing the template tasks and their dependency relationships.
+
+        Returns:
+            ig.Graph: A directed igraph Graph object of the template tasks and dependencies.
+        """
         vertices = [{**task, "name": task["id_task"]} for task in self.template_tasks]
         for vx in vertices:
             vx["type_task"] = vx["type"]
@@ -265,6 +285,13 @@ class PlanningTree:
         return graph
 
     def get_product_sources(self) -> ig.Graph:
+        """Creates and returns a graph of product and source nodes with their relationships.
+
+        This method generates a directed graph representing only the products, sources, and their direct connections.
+
+        Returns:
+            ig.Graph: A directed igraph Graph object of products, sources, and their relationships.
+        """
         vertices = list(self.sources.values()) + list(self.products.values())
         edges = [
             edge
@@ -280,6 +307,13 @@ class PlanningTree:
         return graph
 
     def get_dependencies_total(self) -> ig.Graph:
+        """Creates and returns a graph of all nodes and their dependencies in the planning tree.
+
+        This method generates a directed graph including sources, products, tasks, and all their relationships except source-product edges.
+
+        Returns:
+            ig.Graph: A directed igraph Graph object of all nodes and their dependencies.
+        """
         vertices = (
             list(self.sources.values())
             + list(self.products.values())
