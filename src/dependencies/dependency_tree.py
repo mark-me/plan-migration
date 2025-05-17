@@ -307,7 +307,7 @@ class PlanningTree:
         graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
         return graph
 
-    def get_dependencies_total(self) -> ig.Graph:
+    def get_product_source_tasks(self) -> ig.Graph:
         """Creates and returns a graph of all nodes and their dependencies in the planning tree.
 
         This method generates a directed graph including sources, products, tasks, and all their relationships except source-product edges.
@@ -327,3 +327,7 @@ class PlanningTree:
         ]
         graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
         return graph
+
+    def get_product_tasks(self, id_product: int) -> ig.Graph:
+        dag = self.get_product_source_tasks()
+

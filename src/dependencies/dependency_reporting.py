@@ -86,6 +86,27 @@ class PlanningReport(PlanningTree):
             self._set_node_tooltip(node)
         return dag
 
+    def _set_visual_status(self, dag: ig.Graph) -> ig.Graph:
+        """Sets the color attribute of task nodes based on their status.
+
+        Updates the color of each task node in the graph to visually represent its status.
+
+        Args:
+            dag (ig.Graph): The igraph graph whose task node colors will be updated.
+
+        Returns:
+            ig.Graph: The graph with updated node colors based on status.
+        """
+        for node in dag.vs:
+            if node["type"] == VertexType.TASK.name:
+                if node["status"] == "done":
+                    node["color"] = "limegreen"
+                elif node["status"] == "commited":
+                    node["color"] = "royalblue"
+                else:
+                    node["color"] = "grey"
+        return dag
+
     def plot_graph_html(self, dag: ig.Graph, file_html: str) -> None:
         """Create a html file with a graphical representation of a networkx graph
 
@@ -107,16 +128,39 @@ class PlanningReport(PlanningTree):
         net.write_html(file_html, notebook=False)
 
     def plot_tasks_template(self, file_html: str) -> None:
+        """Plots the task template graph and saves it as an HTML file.
+
+        Builds the task template graph, sets visualization attributes, and exports the result to an HTML file.
+
+        Args:
+            file_html (str): The path to the HTML file where the plot will be saved.
+
+        Returns:
+            None
+        """
         dag = self.get_tasks_template()
         dag = self._set_visual_attributes(dag=dag)
+        for node in dag.vs:
+            node["shape"] = "box"
+            node["label"] = node["description"]
         self.plot_graph_html(dag=dag, file_html=file_html)
 
     def plot_source_products(self, file_html: str) -> None:
+        """Plots the source-product dependency graph and saves it as an HTML file.
+
+        Builds the source-product graph, sets visualization attributes, and exports the result to an HTML file.
+
+        Args:
+            file_html (str): The path to the HTML file where the plot will be saved.
+
+        Returns:
+            None
+        """
         dag = self.get_product_sources()
         dag = self._set_visual_attributes(dag=dag)
         self.plot_graph_html(dag=dag, file_html=file_html)
 
-    def plot_graph_total(self, file_html: str) -> None:
+    def plot_source_product_tasks(self, file_html: str) -> None:
         """Plot the total graph and save it to an HTML file.
 
         Builds the total graph, sets pyvis attributes, and visualizes it in an HTML file.
@@ -127,11 +171,41 @@ class PlanningReport(PlanningTree):
         Returns:
             None
         """
-        dag = self.get_dependencies_total()
+        dag = self.get_product_source_tasks()
         dag = self._set_visual_attributes(dag=dag)
         self.plot_graph_html(dag=dag, file_html=file_html)
 
+    def plot_graph_total_status(self, file_html: str) -> None:
+        """Plot the total graph and save it to an HTML file.
+
+        Builds the total graph, sets pyvis attributes, and visualizes it in an HTML file.
+
+        Args:
+            file_html (str): The path to the HTML file where the plot will be saved.
+
+        Returns:
+            None
+        """
+        dag = self.get_product_source_tasks()
+        dag = self._set_visual_attributes(dag=dag)
+        dag = self._set_visual_status(dag=dag)
+        self.plot_graph_html(dag=dag, file_html=file_html)
+
+    def plot_graph_product_status(self, id_product: int, file_html: str) -> None:
+        dag = self.get_product_tasks(id_product=id_product)
+        dag = self._set_visual_attributes(dag=dag)
+        dag = self._set_visual_status(dag=dag)
+        self.plot_graph_html(dag=dag, file_html=file_html)
+
     def export_tasks(self, file_xlsx: str) -> None:
+        """Exports the list of tasks to an Excel file.
+
+        Args:
+            file_xlsx (str): The path to the Excel file where the tasks will be exported.
+
+        Returns:
+            None
+        """
         lst_tasks = list(self.tasks.values())
         df_tasks = pl.from_dicts(lst_tasks)
         df_tasks.write_excel(file_xlsx)
