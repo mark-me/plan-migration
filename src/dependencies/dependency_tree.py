@@ -246,6 +246,24 @@ class PlanningTree:
             )
         return dependencies
 
+    def get_tasks_template(self) -> ig.Graph:
+        vertices = [{**task, "name": task["id_task"]} for task in self.template_tasks]
+        for vx in vertices:
+            vx["type_task"] = vx["type"]
+            vx["type"] = VertexType.TASK.name
+        edges = []
+        for task in self.template_tasks:
+            edges.extend(
+                {
+                    "source": dependency,
+                    "target": task["id_task"],
+                    "type": EdgeType.TASK_DEPENDENCY.name,
+                }
+                for dependency in task.get("depends_on", [])
+            )
+        graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
+        return graph
+
     def get_dependencies_total(self) -> ig.Graph:
         vertices = (
             list(self.sources.values())

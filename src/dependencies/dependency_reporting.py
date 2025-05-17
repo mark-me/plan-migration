@@ -105,6 +105,11 @@ class PlanningReport(PlanningTree):
             edge["shadow"] = True
         net.write_html(file_html, notebook=False)
 
+    def plot_tasks_template(self, file_html: str) -> None:
+        dag = self.get_tasks_template()
+        dag = self._set_visual_attributes(dag=dag)
+        self.plot_graph_html(dag=dag, file_html=file_html)
+
     def plot_graph_total(self, file_html: str) -> None:
         """Plot the total graph and save it to an HTML file.
 

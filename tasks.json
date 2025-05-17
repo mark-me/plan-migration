@@ -42,7 +42,7 @@
         "description": "Launch product",
         "type": "PRODUCT",
         "depends_on": [
-            "2"
+            "4", "5"
         ]
     },
     {
