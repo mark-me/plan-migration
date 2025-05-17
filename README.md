@@ -1,6 +1,6 @@
 # Migration planning
 
-Data migration or planning report generation tool. It orchestrates the import of product and status data, processes this data using a planning report component, and generates various output files (HTML visualizations and an Excel export).
+Data migration planning and progress report tool.  Orchestrates the import of product and status data, processes this data using a planning report component, and generates various output files (HTML visualizations and an Excel export).
 
 ```mermaid
 sequenceDiagram
@@ -19,5 +19,3 @@ sequenceDiagram
     MainScript->>PlanningReport: export_tasks(tasks.xlsx)
     MainScript->>PlanningReport: add_task_statuses(task_status)
 ```
-
-Data migration or planning report generation tool. It orchestrates the import of product and status data, processes this data using a planning report component, and generates various output files (HTML visualizations and an Excel export).
