@@ -12,4 +12,5 @@ if __name__ == "__main__":
     plan_report.plot_tasks_template(file_html="output/tasks_template.html")
     plan_report.plot_source_products(file_html="output/source_products.html")
     plan_report.plot_graph_total(file_html="output/all.html")
+    plan_report.export_tasks(file_xlsx="output/tasks.xlsx")
     plan_report.add_task_statuses(df_task_status=status_file.task_status)

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import igraph as ig
 import networkx as nx
+import polars as pl
 from pyvis.network import Network
 
 from .dependency_tree import PlanningTree, VertexType, EdgeType
@@ -129,3 +130,8 @@ class PlanningReport(PlanningTree):
         dag = self.get_dependencies_total()
         dag = self._set_visual_attributes(dag=dag)
         self.plot_graph_html(dag=dag, file_html=file_html)
+
+    def export_tasks(self, file_xlsx: str) -> None:
+        lst_tasks = list(self.tasks.values())
+        df_tasks = pl.from_dicts(lst_tasks)
+        df_tasks.write_excel(file_xlsx)
