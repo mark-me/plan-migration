@@ -227,6 +227,9 @@ class PlanningTree:
         for task in self.template_tasks:
             new_task = task.copy()
             new_task["id_task"] = id_mapping[new_task["id_task"]]
+            new_task["related_to"] = (
+                self.products[id_product]["name_product"] if new_task["type_task"] == "PRODUCT" else ""
+            )
             new_task["depends_on"] = [id_mapping[dep] for dep in new_task["depends_on"]]
             new_task["worked_on"] = (
                 id_source if new_task["type_task"] == "SOURCE" else str(id_product)

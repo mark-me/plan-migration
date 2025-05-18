@@ -99,10 +99,10 @@ class PlanningReport(PlanningTree):
         """
         for node in dag.vs:
             if node["type"] == VertexType.TASK.name:
-                node["title"] = node["title"] + f"Status: {node["status"]}"
+                node["title"] = node["title"] + f"Status: {node['status']}"
                 if node["status"] == "done":
                     node["color"] = "limegreen"
-                elif node["status"] == "commited":
+                elif node["status"] == "committed":
                     node["color"] = "royalblue"
                 elif node["status"] == "ready":
                     node["color"] = "violet"
@@ -118,7 +118,9 @@ class PlanningReport(PlanningTree):
             file_html_out (str): file path that the result should be written to
         """
         self._create_output_dir(file_path=file_html)
-        net = Network("900px", "1917px", directed=True, layout=True, neighborhood_highlight=True)
+        net = Network(
+            "900px", "1917px", directed=True, layout=True, neighborhood_highlight=True
+        )
         dag = self._igraph_to_networkx(graph=dag)
         net.from_nx(dag)
         net.options.layout.hierarchical.sortMethod = "directed"
@@ -229,21 +231,27 @@ class PlanningReport(PlanningTree):
         dag = self._set_visual_status(dag=dag)
         self.plot_graph_html(dag=dag, file_html=file_html)
 
-    def get_tasks_old(self) -> pl.DataFrame:
-        lst_tasks = list(self.tasks.values())
-        df_tasks = pl.from_dicts(lst_tasks)
-        if "status" in df_tasks.columns:
-            df_tasks = df_tasks.with_columns(pl.col("status").fill_null("waiting"))
-        return df_tasks
-
     def get_tasks(self) -> pl.DataFrame:
         dag = self.get_product_source_tasks()
-        df_nodes = pl.DataFrame({attr: dag.vs[attr] for attr in dag.vertex_attributes()})
-        df_nodes = df_nodes.filter(pl.col("type") == VertexType.TASK.name)
-        lst_tasks = list(self.tasks.values())
-        df_tasks = pl.from_dicts(lst_tasks)
-        if "status" in df_tasks.columns:
-            df_tasks = df_tasks.with_columns(pl.col("status").fill_null("waiting"))
+        dag = self.set_tasks_ready(dag=dag)
+        df_tasks = pl.DataFrame(
+            {attr: dag.vs[attr] for attr in dag.vertex_attributes()}
+        )
+        df_tasks = (
+            df_tasks.filter(pl.col("type") == VertexType.TASK.name)
+            .with_columns(pl.col("status").fill_null("waiting"))
+            .select(
+                [
+                    "id_task",
+                    "description",
+                    "type_task",
+                    "worked_on",
+                    "related_to",
+                    "status",
+                    "depends_on",
+                ]
+            )
+        )
         return df_tasks
 
     def export_tasks(self, file_xlsx: str) -> None:
