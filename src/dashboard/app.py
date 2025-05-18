@@ -77,6 +77,7 @@ def get_barchart(data: pl.DataFrame, type_task: str):
         category_orders={"status": ["done", "commited", "waiting"]},
     )
     fig.update_layout(font_family="Arial", font_color="#008000")
+    fig.update_xaxes(categoryorder='category ascending')
     return fig
 
 
