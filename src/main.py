@@ -30,8 +30,6 @@ if __name__ == "__main__":
     plan_report.plot_source_products(file_html="output/source_products.html")
     # Plot the full source-product-task dependency graph and save as HTML
     plan_report.plot_source_product_tasks(file_html="output/all.html")
-    # Export all tasks to an Excel file
-    plan_report.export_tasks(file_xlsx="output/tasks.xlsx")
 
     # Load task status data from Excel file
     path_task_status = Path("data/task_status.xlsx")
@@ -46,6 +44,11 @@ if __name__ == "__main__":
     plan_report.plot_graph_total_status(file_html="output/task_status.html")
 
     # Plot the status graph for a specific product and save as HTML
-    plan_report.plot_graph_product_status(id_product=12355, file_html="output/product.html")
+    plan_report.plot_graph_product_status(id_product="12355", file_html="output/product.html")
     # Plot the status graph for a specific source and save as HTML
     plan_report.plot_graph_source_status(id_source="DMS", file_html="output/source.html")
+
+    # Export all tasks to an Excel file
+    plan_report.export_tasks(file_xlsx="output/tasks.xlsx")
+
+    plan_report.get_tasks_next_up()

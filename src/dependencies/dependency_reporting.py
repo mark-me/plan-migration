@@ -99,10 +99,13 @@ class PlanningReport(PlanningTree):
         """
         for node in dag.vs:
             if node["type"] == VertexType.TASK.name:
+                node["title"] = node["title"] + f"Status: {node["status"]}"
                 if node["status"] == "done":
                     node["color"] = "limegreen"
                 elif node["status"] == "commited":
                     node["color"] = "royalblue"
+                elif node["status"] == "ready":
+                    node["color"] = "violet"
                 else:
                     node["color"] = "darkgrey"
         return dag
@@ -187,6 +190,7 @@ class PlanningReport(PlanningTree):
             None
         """
         dag = self.get_product_source_tasks()
+        dag = self.set_tasks_ready(dag=dag)
         dag = self._set_visual_attributes(dag=dag)
         dag = self._set_visual_status(dag=dag)
         self.plot_graph_html(dag=dag, file_html=file_html)
@@ -225,7 +229,17 @@ class PlanningReport(PlanningTree):
         dag = self._set_visual_status(dag=dag)
         self.plot_graph_html(dag=dag, file_html=file_html)
 
+    def get_tasks_old(self) -> pl.DataFrame:
+        lst_tasks = list(self.tasks.values())
+        df_tasks = pl.from_dicts(lst_tasks)
+        if "status" in df_tasks.columns:
+            df_tasks = df_tasks.with_columns(pl.col("status").fill_null("waiting"))
+        return df_tasks
+
     def get_tasks(self) -> pl.DataFrame:
+        dag = self.get_product_source_tasks()
+        df_nodes = pl.DataFrame({attr: dag.vs[attr] for attr in dag.vertex_attributes()})
+        df_nodes = df_nodes.filter(pl.col("type") == VertexType.TASK.name)
         lst_tasks = list(self.tasks.values())
         df_tasks = pl.from_dicts(lst_tasks)
         if "status" in df_tasks.columns:

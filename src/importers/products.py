@@ -12,7 +12,9 @@ class ProductFile:
         Args:
             path_file (Path): Path to the Excel file containing product data.
         """
-        self.df_products = pl.read_excel(source=path_file)
+        df = pl.read_excel(source=path_file)
+        self.df_products = df.with_columns(
+            pl.col("id_product").cast(pl.Utf8).alias("id_product"))
 
     @property
     def products(self) -> pl.DataFrame:

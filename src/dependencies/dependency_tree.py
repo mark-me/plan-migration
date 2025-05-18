@@ -338,7 +338,17 @@ class PlanningTree:
         graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
         return graph
 
-    def get_product_tasks(self, id_product: int) -> ig.Graph:
+    def get_task_graphs(self) -> ig.Graph:
+        vertices = list(self.tasks.values())
+        edges = [
+            edge
+            for edge in self.edges
+            if edge["type"] == EdgeType.TASK_DEPENDENCY.name
+        ]
+        graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
+        return graph
+
+    def get_product_tasks(self, id_product: str) -> ig.Graph:
         """Returns a subgraph containing the specified product and all its dependencies.
 
         Extracts and returns a directed graph of the product node and all nodes that are upstream dependencies.
@@ -362,4 +372,22 @@ class PlanningTree:
         vs = dag.subcomponent(vx_source, mode="out")
         vs_delete = [i for i in dag.vs.indices if i not in vs]
         dag.delete_vertices(vs_delete)
+        return dag
+
+    def set_tasks_ready(self, dag: ig.Graph) -> ig.Graph:
+        lst_next_up = []
+        vs_tasks = dag.vs.select(type_eq=VertexType.TASK.name)
+        for vx in vs_tasks:
+            if vx["status"] is None:
+                vs_predecessors = dag.predecessors(vx)
+                statusses = [
+                    dag.vs[i]["status"]
+                    for i in vs_predecessors
+                    if dag.vs[i]["type"] == VertexType.TASK.name
+                ]
+                if statusses and all(x == "done" for x in statusses):
+                        lst_next_up.append(vx)
+        for vx in lst_next_up:
+                    if vx["type"] == VertexType.TASK.name and vx["status"] is None:
+                        vx["status"] = "ready"
         return dag
