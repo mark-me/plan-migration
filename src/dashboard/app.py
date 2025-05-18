@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 from dash import Dash, dcc, html
+import dash_bootstrap_components as dbc
 import plotly.express as px
 import polars as pl
 
@@ -63,7 +64,11 @@ def get_barchart(data: pl.DataFrame, type_task: str):
         y="len",
         color="status",
         title=f"{type_task.capitalize()} tasks",
-        labels={"len": "# Tasks", "worked_on": type_task.capitalize(), "status": "Status"},
+        labels={
+            "len": "# Tasks",
+            "worked_on": type_task.capitalize(),
+            "status": "Status",
+        },
         color_discrete_map={
             "done": "#008000",
             "commited": "royalblue",
@@ -78,18 +83,129 @@ def get_barchart(data: pl.DataFrame, type_task: str):
     return fig
 
 
-app = Dash(__name__)
+def draw_barchart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
+    return html.Div(
+        [
+            dbc.Card(
+                dbc.CardBody(
+                    [
+                        dcc.Graph(
+                            figure=get_barchart(data=data_tasks, type_task=type_task),
+                            config={"displayModeBar": False},
+                        )
+                    ]
+                )
+            )
+        ]
+    )
+
+
+def get_piechart(data_tasks: pl.DataFrame, type_task: str):
+    data = (
+        data_tasks.filter(pl.col("type_task") == type_task).group_by(["status"]).len()
+    )
+    fig = px.pie(
+        data,
+        values="len",
+        names="status",
+        color="status",
+        title=f"{type_task.capitalize()} tasks",
+        color_discrete_map={
+            "done": "#008000",
+            "commited": "royalblue",
+            "waiting": "lightsteelblue",
+        },
+    )
+    fig.update_layout(
+        font_family="Arial",
+        font_color="#008000",
+    )
+    return fig
+
+
+def draw_piechart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
+    return html.Div(
+        [
+            dbc.Card(
+                dbc.CardBody(
+                    [
+                        dcc.Graph(
+                            figure=get_piechart(
+                                data_tasks=data_tasks, type_task=type_task
+                            ),
+                            config={"displayModeBar": False},
+                        )
+                    ]
+                )
+            )
+        ]
+    )
+
+
+app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.layout = html.Div(
-    children=[
-        html.H1(
-            children="Migration progress",
-            style={"textAlign": "center", "color": "#008000", "font-family": "Arial"},
-        ),
-        dcc.Graph(figure=get_barchart(data=data_tasks, type_task="SOURCE")),
-        dcc.Graph(figure=get_barchart(data=data_tasks, type_task="PRODUCT")),
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    dbc.Row(
+                        dbc.Col(
+                            html.H1(
+                                children="Migration progress",
+                                style={
+                                    "textAlign": "center",
+                                    "color": "#008000",
+                                    "font-family": "Arial",
+                                },
+                            )
+                        )
+                    ),
+                    html.Br(),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    draw_piechart(
+                                        data_tasks=data_tasks, type_task="SOURCE"
+                                    )
+                                ],
+                                width=3,
+                            ),
+                            dbc.Col(
+                                [
+                                    draw_barchart(
+                                        data_tasks=data_tasks, type_task="SOURCE"
+                                    )
+                                ],
+                                width=9,
+                            ),
+                        ]
+                    ),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    draw_piechart(
+                                        data_tasks=data_tasks, type_task="PRODUCT"
+                                    )
+                                ],
+                                width=3,
+                            ),
+                            dbc.Col(
+                                [
+                                    draw_barchart(
+                                        data_tasks=data_tasks, type_task="PRODUCT"
+                                    )
+                                ],
+                                width=9,
+                            ),
+                        ]
+                    ),
+                ]
+            )
+        )
     ]
 )
-
 if __name__ == "__main__":
     app.run(debug=True)
