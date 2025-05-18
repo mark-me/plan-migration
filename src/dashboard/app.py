@@ -57,28 +57,35 @@ def get_barchart(data: pl.DataFrame, type_task: str):
         .len()
         .sort("worked_on")
     )
-    fig_source = px.bar(
+    fig = px.bar(
         data,
         x="worked_on",
         y="len",
         color="status",
         title=f"{type_task.capitalize()} tasks",
-        labels={"len": "# Tasks", "worked_on": type_task.capitalize()},
+        labels={"len": "# Tasks", "worked_on": type_task.capitalize(), "status": "Status"},
         color_discrete_map={
-            "done": "limegreen",
+            "done": "#008000",
             "commited": "royalblue",
             "waiting": "lightsteelblue",
         },
         category_orders={"status": ["done", "commited", "waiting"]},
     )
-    return fig_source
+    fig.update_layout(
+        font_family="Arial",
+        font_color="#008000",
+    )
+    return fig
 
 
 app = Dash(__name__)
 
 app.layout = html.Div(
     children=[
-        html.H1(children="Migration Analytics"),
+        html.H1(
+            children="Migration Analytics",
+            style={"textAlign": "center", "color": "#008000", "font-family": "Arial"},
+        ),
         dcc.Graph(figure=get_barchart(data=data_tasks, type_task="SOURCE")),
         dcc.Graph(figure=get_barchart(data=data_tasks, type_task="PRODUCT")),
     ]
