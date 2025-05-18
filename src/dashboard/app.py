@@ -77,7 +77,7 @@ def get_overall_chart(data: pl.DataFrame):
         x="len",
         y="x",
         color="status",
-        title="Total number of tasks",
+        title="All source and product related tasks",
         labels={
             "x": "",
             "len": "",
@@ -278,7 +278,6 @@ app.layout = html.Div(
                 "font-family": "Arial",
             },
         ),
-        html.Br(),
         dbc.Row(dbc.Col(draw_overall(data_tasks=data_tasks))),
         dcc.Tabs(
             [
