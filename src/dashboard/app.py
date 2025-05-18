@@ -113,6 +113,7 @@ def get_piechart(data_tasks: pl.DataFrame, type_task: str):
             "commited": "royalblue",
             "waiting": "lightsteelblue",
         },
+        category_orders={"status": ["done", "commited", "waiting"]},
     )
     fig.update_layout(
         font_family="Arial",
