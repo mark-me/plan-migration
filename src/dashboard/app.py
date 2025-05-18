@@ -40,6 +40,55 @@ plan_report.add_task_statuses(df_task_status=status_file.task_status)
 data_tasks = plan_report.get_tasks()
 
 
+def get_overall(data: pl.DataFrame):
+    data = data_tasks.group_by(["status"]).len()
+    data = data.with_columns(x=pl.lit("Total"))
+    fig = px.bar(
+        data,
+        x="len",
+        y="x",
+        color="status",
+        title="Total number of tasks",
+        labels={
+            "x": "",
+            "len": "",
+            "status": "Status",
+        },
+        color_discrete_map={
+            "done": "#008000",
+            "commited": "royalblue",
+            "waiting": "lightsteelblue",
+        },
+        category_orders={"status": ["done", "commited", "waiting"]},
+        height=250,
+        text_auto=True,
+    )
+    fig.update_layout(
+        font_family="Arial",
+        font_color="#008000",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    fig.update_yaxes(showticklabels=False)
+    return fig
+
+
+def draw_overall(data_tasks: pl.DataFrame) -> html.Div:
+    return html.Div(
+        [
+            dbc.Card(
+                dbc.CardBody(
+                    [
+                        dcc.Graph(
+                            figure=get_overall(data=data_tasks),
+                            config={"displayModeBar": False},
+                        )
+                    ]
+                )
+            )
+        ]
+    )
+
+
 def get_barchart(data: pl.DataFrame, type_task: str):
     """Generates a bar chart of task counts by status and group.
 
@@ -158,6 +207,7 @@ app.layout = html.Div(
             )
         ),
         html.Br(),
+        dbc.Row(dbc.Col(draw_overall(data_tasks=data_tasks))),
         dcc.Tabs(
             [
                 dcc.Tab(
