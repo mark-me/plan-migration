@@ -348,9 +348,7 @@ class PlanningTree:
         """
         vertices = list(self.tasks.values())
         edges = [
-            edge
-            for edge in self.edges
-            if edge["type"] == EdgeType.TASK_DEPENDENCY.name
+            edge for edge in self.edges if edge["type"] == EdgeType.TASK_DEPENDENCY.name
         ]
         graph = ig.Graph.DictList(vertices=vertices, edges=edges, directed=True)
         return graph
@@ -413,8 +411,8 @@ class PlanningTree:
                     if dag.vs[i]["type"] == VertexType.TASK.name
                 ]
                 if statusses and all(x == "done" for x in statusses):
-                        lst_next_up.append(vx)
+                    lst_next_up.append(vx)
         for vx in lst_next_up:
-                    if vx["type"] == VertexType.TASK.name and vx["status"] is None:
-                        vx["status"] = "ready"
+            if vx["type"] == VertexType.TASK.name and vx["status"] is None:
+                vx["status"] = "ready"
         return dag
