@@ -50,5 +50,3 @@ if __name__ == "__main__":
 
     # Export all tasks to an Excel file
     plan_report.export_tasks(file_xlsx="output/tasks.xlsx")
-
-    plan_report.get_tasks_next_up()
