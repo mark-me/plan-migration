@@ -83,7 +83,7 @@ app = Dash(__name__)
 app.layout = html.Div(
     children=[
         html.H1(
-            children="Migration Analytics",
+            children="Migration progress",
             style={"textAlign": "center", "color": "#008000", "font-family": "Arial"},
         ),
         dcc.Graph(figure=get_barchart(data=data_tasks, type_task="SOURCE")),
