@@ -339,6 +339,13 @@ class PlanningTree:
         return graph
 
     def get_task_graphs(self) -> ig.Graph:
+        """Creates and returns a graph of all tasks and their dependencies.
+
+        This method generates a directed graph representing only the tasks and their dependency relationships.
+
+        Returns:
+            ig.Graph: A directed igraph Graph object of tasks and their dependencies.
+        """
         vertices = list(self.tasks.values())
         edges = [
             edge
@@ -367,6 +374,16 @@ class PlanningTree:
         return dag
 
     def get_source_tasks(self, id_source: str) -> ig.Graph:
+        """Returns a subgraph containing the specified source and all its downstream dependencies.
+
+        Extracts and returns a directed graph of the source node and all nodes that are downstream dependencies.
+
+        Args:
+            id_source (str): The identifier of the source node to extract dependencies for.
+
+        Returns:
+            ig.Graph: A directed igraph Graph object containing the source and its dependencies.
+        """
         dag = self.get_product_source_tasks()
         vx_source = dag.vs.select(name=id_source)[0]
         vs = dag.subcomponent(vx_source, mode="out")
@@ -375,6 +392,16 @@ class PlanningTree:
         return dag
 
     def set_tasks_ready(self, dag: ig.Graph) -> ig.Graph:
+        """Sets the status of tasks to 'ready' if all their task dependencies are marked as 'done'.
+
+        Iterates through all task nodes in the graph and updates their status to 'ready' if all predecessor tasks are completed.
+
+        Args:
+            dag (ig.Graph): The igraph Graph object containing tasks and their dependencies.
+
+        Returns:
+            ig.Graph: The updated igraph Graph object with task statuses set to 'ready' where appropriate.
+        """
         lst_next_up = []
         vs_tasks = dag.vs.select(type_eq=VertexType.TASK.name)
         for vx in vs_tasks:
