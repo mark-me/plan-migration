@@ -107,7 +107,7 @@ def get_piechart(data_tasks: pl.DataFrame, type_task: str):
         values="len",
         names="status",
         color="status",
-        title="Total",
+        title="Percentage of tasks",
         color_discrete_map={
             "done": "#008000",
             "commited": "royalblue",
@@ -143,100 +143,76 @@ def draw_piechart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
 
 app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-app.layout = dbc.Container(
+app.layout = html.Div(
     [
-        dbc.Card(
-            dbc.CardBody(
-                [
-                    dbc.Row(
-                        dbc.Col(
-                            html.H2(
-                                children="Migration progress",
-                                style={
-                                    "textAlign": "center",
-                                    "color": "#008000",
-                                    "font-family": "Arial",
-                                },
-                            )
-                        )
-                    ),
-                    dbc.Row(
-                        dbc.Col(
-                            dbc.Card(
-                                dbc.CardBody(
-                                    html.H5(
-                                        children="Sources",
-                                        style={
-                                            "textAlign": "left",
-                                            "color": "#008000",
-                                            "font-family": "Arial",
-                                        },
-                                    )
-                                )
-                            )
-                        )
-                    ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                [
-                                    draw_piechart(
-                                        data_tasks=data_tasks, type_task="SOURCE"
-                                    )
-                                ],
-                                width=3,
-                            ),
-                            dbc.Col(
-                                [
-                                    draw_barchart(
-                                        data_tasks=data_tasks, type_task="SOURCE"
-                                    )
-                                ],
-                                width=9,
-                            ),
-                        ]
-                    ),
-                    dbc.Row(
-                        dbc.Col(
-                            dbc.Card(
-                                dbc.CardBody(
-                                    html.H5(
-                                        children="Products",
-                                        style={
-                                            "textAlign": "left",
-                                            "color": "#008000",
-                                            "font-family": "Arial",
-                                        },
-                                    )
-                                )
-                            )
-                        )
-                    ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                [
-                                    draw_piechart(
-                                        data_tasks=data_tasks, type_task="PRODUCT"
-                                    )
-                                ],
-                                width=3,
-                            ),
-                            dbc.Col(
-                                [
-                                    draw_barchart(
-                                        data_tasks=data_tasks, type_task="PRODUCT"
-                                    )
-                                ],
-                                width=9,
-                            ),
-                        ]
-                    ),
-                ]
+        dbc.Row(
+            dbc.Col(
+                html.H1(
+                    children="Migration progress",
+                    style={
+                        "textAlign": "center",
+                        "color": "#008000",
+                        "font-family": "Arial",
+                    },
+                )
             )
-        )
-    ],
-    fluid=True,
+        ),
+        html.Br(),
+        dcc.Tabs(
+            [
+                dcc.Tab(
+                    label="Products",
+                    children=[
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    [
+                                        draw_piechart(
+                                            data_tasks=data_tasks, type_task="PRODUCT"
+                                        )
+                                    ],
+                                    width=3,
+                                ),
+                                dbc.Col(
+                                    [
+                                        draw_barchart(
+                                            data_tasks=data_tasks, type_task="PRODUCT"
+                                        )
+                                    ],
+                                    width=9,
+                                ),
+                            ]
+                        ),
+                    ],
+                ),
+                dcc.Tab(
+                    label="Sources",
+                    children=[
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    [
+                                        draw_piechart(
+                                            data_tasks=data_tasks, type_task="SOURCE"
+                                        )
+                                    ],
+                                    width=3,
+                                ),
+                                dbc.Col(
+                                    [
+                                        draw_barchart(
+                                            data_tasks=data_tasks, type_task="SOURCE"
+                                        )
+                                    ],
+                                    width=9,
+                                ),
+                            ]
+                        )
+                    ],
+                ),
+            ]
+        ),
+    ]
 )
 if __name__ == "__main__":
     app.run(debug=True)
