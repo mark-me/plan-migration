@@ -63,7 +63,7 @@ def get_barchart(data: pl.DataFrame, type_task: str):
         x="worked_on",
         y="len",
         color="status",
-        title=f"{type_task.capitalize()} tasks",
+        # title=f"{type_task.capitalize()} tasks",
         labels={
             "len": "# Tasks",
             "worked_on": type_task.capitalize(),
@@ -77,7 +77,7 @@ def get_barchart(data: pl.DataFrame, type_task: str):
         category_orders={"status": ["done", "commited", "waiting"]},
     )
     fig.update_layout(font_family="Arial", font_color="#008000")
-    fig.update_xaxes(categoryorder='category ascending')
+    fig.update_xaxes(categoryorder="category ascending")
     return fig
 
 
@@ -107,7 +107,7 @@ def get_piechart(data_tasks: pl.DataFrame, type_task: str):
         values="len",
         names="status",
         color="status",
-        title=f"{type_task.capitalize()} tasks",
+        title="Total",
         color_discrete_map={
             "done": "#008000",
             "commited": "royalblue",
@@ -143,14 +143,14 @@ def draw_piechart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
 
 app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-app.layout = html.Div(
+app.layout = dbc.Container(
     [
         dbc.Card(
             dbc.CardBody(
                 [
                     dbc.Row(
                         dbc.Col(
-                            html.H1(
+                            html.H2(
                                 children="Migration progress",
                                 style={
                                     "textAlign": "center",
@@ -160,7 +160,22 @@ app.layout = html.Div(
                             )
                         )
                     ),
-                    html.Br(),
+                    dbc.Row(
+                        dbc.Col(
+                            dbc.Card(
+                                dbc.CardBody(
+                                    html.H5(
+                                        children="Sources",
+                                        style={
+                                            "textAlign": "left",
+                                            "color": "#008000",
+                                            "font-family": "Arial",
+                                        },
+                                    )
+                                )
+                            )
+                        )
+                    ),
                     dbc.Row(
                         [
                             dbc.Col(
@@ -180,6 +195,22 @@ app.layout = html.Div(
                                 width=9,
                             ),
                         ]
+                    ),
+                    dbc.Row(
+                        dbc.Col(
+                            dbc.Card(
+                                dbc.CardBody(
+                                    html.H5(
+                                        children="Products",
+                                        style={
+                                            "textAlign": "left",
+                                            "color": "#008000",
+                                            "font-family": "Arial",
+                                        },
+                                    )
+                                )
+                            )
+                        )
                     ),
                     dbc.Row(
                         [
@@ -204,7 +235,8 @@ app.layout = html.Div(
                 ]
             )
         )
-    ]
+    ],
+    fluid=True,
 )
 if __name__ == "__main__":
     app.run(debug=True)
