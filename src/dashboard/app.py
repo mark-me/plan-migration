@@ -62,7 +62,7 @@ def get_barchart(data: pl.DataFrame, type_task: str):
         x="worked_on",
         y="len",
         color="status",
-        title="Source tasks",
+        title=f"{type_task.capitalize()} tasks",
         labels={"len": "# Tasks", "worked_on": "Source"},
         color_discrete_map={
             "done": "limegreen",
