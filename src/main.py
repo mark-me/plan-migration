@@ -41,7 +41,7 @@ if __name__ == "__main__":
     # Add task statuses to the planning report
     plan_report.add_task_statuses(df_task_status=status_file.task_status)
     # Plot the full graph with task statuses and save as HTML
-    plan_report.plot_graph_total_status(file_html="output/task_status.html")
+    plan_report.plot_graph_total_status(file_html="output/all_task_status.html")
 
     # Plot the status graph for a specific product and save as HTML
     plan_report.plot_graph_product_status(id_product="12355", file_html="output/product.html")
