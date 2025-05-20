@@ -51,12 +51,22 @@ class PlanningReport(PlanningTree):
         return dag_nx
 
     def _set_node_tooltip(self, node: ig.Vertex) -> None:
+        """Sets the tooltip text for a node based on its type and attributes.
+
+        Updates the 'title' attribute of the node to provide context-specific information for visualization tooltips.
+
+        Args:
+            node (ig.Vertex): The igraph vertex node to set the tooltip for.
+
+        Returns:
+            None
+        """
         if node["type"] == VertexType.SOURCE.name:
             node["title"] = f"""System: {node["name"]}"""
         elif node["type"] == VertexType.PRODUCT.name:
             node["title"] = f"""ID: {node["name"]}
                         Name: {node["name_product"]}
-                        Status: {node["status"]}
+                        Status: {node["status_product"]}
                     """
         elif node["type"] == VertexType.TASK.name:
             node["title"] = f"""ID: {node["name"]}
@@ -232,6 +242,13 @@ class PlanningReport(PlanningTree):
         self.plot_graph_html(dag=dag, file_html=file_html)
 
     def get_tasks(self) -> pl.DataFrame:
+        """Returns a DataFrame of all tasks with their attributes and computed statuses.
+
+        Builds the full dependency graph, updates task statuses, and extracts task information into a Polars DataFrame.
+
+        Returns:
+            pl.DataFrame: A DataFrame containing all tasks and their attributes.
+        """
         dag = self.get_product_source_tasks()
         dag = self.set_tasks_ready(dag=dag)
         df_tasks = pl.DataFrame(

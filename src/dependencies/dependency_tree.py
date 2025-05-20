@@ -116,7 +116,7 @@ class PlanningTree:
             df_product_sources (pl.DataFrame): DataFrame containing product and source information.
         """
         products = (
-            df_product_sources.select(["id_product", "name_product", "status"])
+            df_product_sources.select(["id_product", "name_product", "status_product"])
             .rename({"id_product": "name"})
             .unique()
             .to_dicts()

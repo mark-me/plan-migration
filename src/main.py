@@ -10,47 +10,62 @@ from dashboard import Dashboard
 
 logger = logging.getLogger(__name__)
 
+class DataFileNotFoundError(Exception):
+    """Raised when a required data file is not found."""
+
+
 def load_data(config: dict) -> PlanningReport:
+    """Loads product, source, and task status data into a PlanningReport.
+
+    Reads product, source, and task status files as specified in the config, and returns a populated PlanningReport object.
+
+    Args:
+        config (dict): Configuration dictionary containing file paths and settings.
+
+    Returns:
+        PlanningReport: The populated PlanningReport object with all data loaded.
+
+    Raises:
+        DataFileNotFoundError: If any required data file is not found.
+    """
     # Load product and source system data from Excel file
     path_products = Path(f"{config["dir_data"]}/{config["file_products"]}")
-    if path_products.exists():
-        product_file = ProductFile(path_file=path_products)
-        logger.info(f"Product file '{path_products}' loaded.")
-    else:
-        logger.error(f"No product file '{path_products}' found.")
-        sys.exit(1)
+    if not path_products.exists():
+        raise DataFileNotFoundError(f"No product file '{path_products}' found.")
 
+    product_file = ProductFile(path_file=path_products)
+    logger.info(f"Product file '{path_products}' loaded.")
     # Initialize the planning report with the task template JSON
     path_tasks = Path(f"{config["dir_data"]}/{config["file_task_template"]}")
-    if path_tasks.exists():
-        plan_report = PlanningReport(file_task_template=path_tasks)
-        logger.info(f"Task template file '{path_tasks}' loaded.")
-    else:
-        logger.error(f"No task template file '{path_tasks}' found.")
-        sys.exit(1)
+    if not path_tasks.exists():
+        raise DataFileNotFoundError(f"No product file '{path_products}' found.")
 
+    plan_report = PlanningReport(file_task_template=path_tasks)
+    logger.info(f"Task template file '{path_tasks}' loaded.")
     # Add products and sources to the planning report
     plan_report.add_product_sources(df_product_sources=product_file.product_sources)
 
     # Load task status data from Excel file
-    for files_status in config["file_statusses"]:
-        path_task_status = Path(f"{config["dir_data"]}/{files_status}")
+    for file_status in config["files_status"]:
+        path_task_status = Path(f"{config["dir_data"]}/{file_status}")
 
-        if path_task_status.exists():
-            status_file = StatusFile(path_file=path_task_status)
-            logger.info(f"Task status file '{path_task_status}' loaded.")
-        else:
-            logger.error(f"No task status file '{path_task_status}' found.")
-            sys.exit(1)
+        if not path_task_status.exists():
+            raise DataFileNotFoundError(f"No product file '{path_products}' found.")
 
+        status_file = StatusFile(path_file=path_task_status)
+        logger.info(f"Task status file '{path_task_status}' loaded.")
         # Add task statuses to the planning report
         plan_report.add_task_statuses(df_task_status=status_file.task_status)
 
     return plan_report
 
 def main():
+    """Runs the main workflow for loading data, generating reports, and starting the dashboard.
+
+    Loads configuration, processes data, generates visualizations and exports, and launches the dashboard application.
+    """
     with open("config.yml", encoding="utf-8") as file:
-        config = yaml.load(file, Loader=yaml.Loader)
+        config = yaml.safe_load(file)
     plan_report = load_data(config=config)
 
     # Plot the template of all tasks and save as HTML
@@ -79,9 +94,9 @@ def main():
     logger.info(f"Product task flow for product {config["inspect_product"]} visualized in '{file_output}'.")
 
     # Export all tasks to an Excel file
-    file_output = f"{config["dir_output"]}/tasks.html"
+    file_output = f"{config["dir_output"]}/tasks.xlsx"
     plan_report.export_tasks(file_xlsx=file_output)
-    logger.info(f"Task status in total overview visualized in '{file_output}'.")
+    logger.info(f"Tasks exported to '{file_output}'.")
 
     # Start dashboard
     app = Dashboard(df_tasks_status=plan_report.get_tasks())

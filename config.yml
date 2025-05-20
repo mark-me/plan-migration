@@ -1,7 +1,7 @@
 dir_data: "data"
 file_products: "product_sources.xlsx"
 file_task_template: "tasks.json"
-file_statusses:
+files_status:
   - "task_status.xlsx"
 dir_output: "output"
 inspect_product: "12355"

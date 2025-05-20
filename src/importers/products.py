@@ -23,9 +23,9 @@ class ProductFile:
         The DataFrame includes the product ID, name, and status for each product.
 
         Returns:
-            pl.DataFrame: DataFrame with columns 'id_product', 'name_product', and 'status'.
+            pl.DataFrame: DataFrame with columns 'id_product', 'name_product', and 'status_product'.
         """
-        return self.df_products.select(["id_product", "name_product", "status"])
+        return self.df_products.select(["id_product", "name_product", "status_product"])
 
     @property
     def product_sources(self) -> pl.DataFrame:
