@@ -12,6 +12,19 @@ LEGEND_COLORS = {
 
 CATEGORY_ORDER = {"status": ["done", "committed", "ready", "waiting"]}
 
+CONFIG_BUTTONS = {
+    "modeBarButtonsToRemove": [
+        "zoom2d",
+        "pan2d",
+        "select2d",
+        "lasso2d",
+        "autoScale2d",
+        "resetScale2d",
+        "zoomIn2d",
+        "zoomOut2d",
+    ]
+}
+
 
 def get_overall_chart(data: pl.DataFrame):
     """Generates a bar chart showing the total number of tasks by status.
@@ -121,6 +134,24 @@ def get_bar_chart(data: pl.DataFrame, type_task: str):
     fig.update_xaxes(categoryorder="category ascending")
     return fig
 
+def get_bar_polar_chart(data: pl.DataFrame, type_task: str):
+    data = (
+        data.filter(pl.col("type_task") == type_task)
+        .group_by(["worked_on", "status"])
+        .len()
+        .sort("worked_on", descending=True)
+    )
+    fig = px.bar_polar(
+        data,
+        r="len",
+        theta="worked_on",
+        color="status",
+        color_discrete_map=LEGEND_COLORS,
+        category_orders=CATEGORY_ORDER,
+    )
+    fig.update_polars(angularaxis_direction='clockwise', angularaxis_showgrid=False)
+    return fig
+
 
 def draw_overall(data_tasks: pl.DataFrame) -> html.Div:
     """Creates a Dash HTML component containing an overall bar chart of task statuses.
@@ -140,7 +171,8 @@ def draw_overall(data_tasks: pl.DataFrame) -> html.Div:
                     [
                         dcc.Graph(
                             figure=get_overall_chart(data=data_tasks),
-                            config={"displayModeBar": False},
+                            config=CONFIG_BUTTONS,
+                            # config={"displayModeBar": False},
                         )
                     ]
                 )
@@ -149,35 +181,8 @@ def draw_overall(data_tasks: pl.DataFrame) -> html.Div:
     )
 
 
-def draw_barchart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
-    """Creates a Dash HTML component containing a bar chart of tasks by status and group.
 
-    Wraps the generated bar chart in a styled card for display in the dashboard layout.
-
-    Args:
-        data_tasks (pl.DataFrame): The DataFrame containing task data.
-        type_task (str): The type of task to filter for (e.g., "SOURCE" or "PRODUCT").
-
-    Returns:
-        html.Div: A Dash HTML Div containing the bar chart card.
-    """
-    return html.Div(
-        [
-            dbc.Card(
-                dbc.CardBody(
-                    [
-                        dcc.Graph(
-                            figure=get_bar_chart(data=data_tasks, type_task=type_task),
-                            config={"displayModeBar": False},
-                        )
-                    ]
-                )
-            )
-        ]
-    )
-
-
-def draw_piechart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
+def draw_pie_chart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
     """Creates a Dash HTML component containing a pie chart of task statuses for a given task type.
 
     Wraps the generated pie chart in a styled card for display in the dashboard layout.
@@ -198,7 +203,61 @@ def draw_piechart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
                             figure=get_pie_chart(
                                 data_tasks=data_tasks, type_task=type_task
                             ),
-                            config={"displayModeBar": False},
+                            config=CONFIG_BUTTONS,
+                        )
+                    ]
+                )
+            )
+        ]
+    )
+
+def draw_bar_chart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
+    """Creates a Dash HTML component containing a bar chart of tasks by status and group.
+
+    Wraps the generated bar chart in a styled card for display in the dashboard layout.
+
+    Args:
+        data_tasks (pl.DataFrame): The DataFrame containing task data.
+        type_task (str): The type of task to filter for (e.g., "SOURCE" or "PRODUCT").
+
+    Returns:
+        html.Div: A Dash HTML Div containing the bar chart card.
+    """
+    return html.Div(
+        [
+            dbc.Card(
+                dbc.CardBody(
+                    [
+                        dcc.Graph(
+                            figure=get_bar_chart(data=data_tasks, type_task=type_task),
+                            config=CONFIG_BUTTONS,
+                        )
+                    ]
+                )
+            )
+        ]
+    )
+
+def draw_bar_polar_chart(data_tasks: pl.DataFrame, type_task: str) -> html.Div:
+    """Creates a Dash HTML component containing a bar chart of tasks by status and group.
+
+    Wraps the generated bar chart in a styled card for display in the dashboard layout.
+
+    Args:
+        data_tasks (pl.DataFrame): The DataFrame containing task data.
+        type_task (str): The type of task to filter for (e.g., "SOURCE" or "PRODUCT").
+
+    Returns:
+        html.Div: A Dash HTML Div containing the bar chart card.
+    """
+    return html.Div(
+        [
+            dbc.Card(
+                dbc.CardBody(
+                    [
+                        dcc.Graph(
+                            figure=get_bar_polar_chart(data=data_tasks, type_task=type_task),
+                            config=CONFIG_BUTTONS,
                         )
                     ]
                 )

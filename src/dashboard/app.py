@@ -2,7 +2,7 @@ import dash_bootstrap_components as dbc
 import polars as pl
 from dash import Dash, dcc, html
 
-from .charts import draw_barchart, draw_overall, draw_piechart
+from .charts import draw_bar_chart, draw_overall, draw_pie_chart, draw_bar_polar_chart
 
 
 class Dashboard:
@@ -44,7 +44,7 @@ class Dashboard:
                                     [
                                         dbc.Col(
                                             [
-                                                draw_piechart(
+                                                draw_pie_chart(
                                                     data_tasks=self.data_tasks,
                                                     type_task="PRODUCT",
                                                 )
@@ -53,7 +53,7 @@ class Dashboard:
                                         ),
                                         dbc.Col(
                                             [
-                                                draw_barchart(
+                                                draw_bar_polar_chart(
                                                     data_tasks=self.data_tasks,
                                                     type_task="PRODUCT",
                                                 )
@@ -71,7 +71,7 @@ class Dashboard:
                                     [
                                         dbc.Col(
                                             [
-                                                draw_piechart(
+                                                draw_pie_chart(
                                                     data_tasks=self.data_tasks,
                                                     type_task="SOURCE",
                                                 )
@@ -80,7 +80,7 @@ class Dashboard:
                                         ),
                                         dbc.Col(
                                             [
-                                                draw_barchart(
+                                                draw_bar_polar_chart(
                                                     data_tasks=self.data_tasks,
                                                     type_task="SOURCE",
                                                 )
