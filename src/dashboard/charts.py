@@ -109,18 +109,18 @@ def get_bar_chart(data: pl.DataFrame, type_task: str):
     """
     data = (
         data.filter(pl.col("type_task") == type_task)
-        .group_by(["worked_on", "status"])
+        .group_by(["related_to", "status"])
         .len()
-        .sort("worked_on")
+        .sort("related_to")
     )
     fig = px.bar(
         data,
-        x="worked_on",
+        x="related_to",
         y="len",
         color="status",
         labels={
             "len": "# Tasks",
-            "worked_on": type_task.capitalize(),
+            "related_to": type_task.capitalize(),
             "status": "Status",
         },
         color_discrete_map=LEGEND_COLORS,
@@ -137,17 +137,22 @@ def get_bar_chart(data: pl.DataFrame, type_task: str):
 def get_bar_polar_chart(data: pl.DataFrame, type_task: str):
     data = (
         data.filter(pl.col("type_task") == type_task)
-        .group_by(["worked_on", "status"])
+        .group_by(["related_to", "status"])
         .len()
-        .sort("worked_on", descending=True)
+        .sort("related_to", descending=True)
     )
     fig = px.bar_polar(
         data,
         r="len",
-        theta="worked_on",
+        theta="related_to",
         color="status",
         color_discrete_map=LEGEND_COLORS,
         category_orders=CATEGORY_ORDER,
+        labels={
+            "len": "# Tasks",
+            "related_to": type_task.capitalize(),
+            "status": "Status",
+        },
     )
     fig.update_polars(angularaxis_direction='clockwise', angularaxis_showgrid=False)
     return fig

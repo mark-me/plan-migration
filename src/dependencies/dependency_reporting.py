@@ -257,6 +257,7 @@ class PlanningReport(PlanningTree):
         df_tasks = (
             df_tasks.filter(pl.col("type") == VertexType.TASK.name)
             .with_columns(pl.col("status").fill_null("waiting"))
+            .with_columns(pl.when(pl.col.related_to == "").then(pl.col.worked_on).otherwise(pl.col.related_to).alias("related_to"))
             .select(
                 [
                     "id_task",
