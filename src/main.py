@@ -1,5 +1,4 @@
 import logging
-import sys
 import yaml
 from pathlib import Path
 
@@ -59,48 +58,78 @@ def load_data(config: dict) -> PlanningReport:
 
     return plan_report
 
+def _load_config(path: str = "config.yml") -> dict:
+    """Load configuration from a YAML file."""
+    with open(path, encoding="utf-8") as file:
+        return yaml.safe_load(file)
+
+
+def _plot_task_templates(plan_report: PlanningReport, dir_output: str) -> None:
+    """Plot and save task template-related visualizations."""
+    file_output = f"{dir_output}/tasks_template.html"
+    plan_report.plot_tasks_template(file_html=file_output)
+    logger.info(f"Task template visualized in '{file_output}'.")
+
+
+def _plot_dependencies(plan_report: PlanningReport, dir_output: str) -> None:
+    """Plot and save dependency graphs."""
+    file_output = f"{dir_output}/source_products.html"
+    plan_report.plot_source_products(file_html=file_output)
+    logger.info(f"Source product combinations visualized in '{file_output}'.")
+
+    file_output = f"{dir_output}/all.html"
+    plan_report.plot_source_product_tasks(file_html=file_output)
+    logger.info(f"Source product combinations visualized in '{file_output}'.")
+
+
+def _plot_status_graphs(plan_report: PlanningReport, config: dict) -> None:
+    """Plot and save task status-related graphs."""
+    dir_output = config["dir_output"]
+
+    file_output = f"{dir_output}/all_task_status.html"
+    plan_report.plot_graph_total_status(file_html=file_output)
+    logger.info(f"All tasks with their status visualized in '{file_output}'.")
+
+    file_output = f"{dir_output}/product.html"
+    plan_report.plot_graph_product_status(
+        id_product=config["inspect_product"], file_html=file_output
+    )
+    logger.info(
+        f"Product task flow for product {config['inspect_product']} visualized in '{file_output}'."
+    )
+
+
+def _export_tasks(plan_report: PlanningReport, dir_output: str) -> None:
+    """Export all tasks to an Excel file."""
+    file_output = f"{dir_output}/tasks.xlsx"
+    plan_report.export_tasks(file_xlsx=file_output)
+    logger.info(f"Tasks exported to '{file_output}'.")
+
+
+def _generate_reports(plan_report: PlanningReport, config: dict) -> None:
+    """Generate all plots and exports based on the planning report and config."""
+    dir_output = config["dir_output"]
+    _plot_task_templates(plan_report=plan_report, dir_output=dir_output)
+    _plot_dependencies(plan_report=plan_report, dir_output=dir_output)
+    _plot_status_graphs(plan_report=plan_report, config=config)
+    _export_tasks(plan_report=plan_report, dir_output=dir_output)
+
+
+def _start_dashboard(plan_report: PlanningReport) -> None:
+    """Start the dashboard application."""
+    app = Dashboard(df_tasks_status=plan_report.get_tasks())
+    app.start()
+
+
 def main():
     """Runs the main workflow for loading data, generating reports, and starting the dashboard.
 
     Loads configuration, processes data, generates visualizations and exports, and launches the dashboard application.
     """
-    with open("config.yml", encoding="utf-8") as file:
-        config = yaml.safe_load(file)
+    config = _load_config()
     plan_report = load_data(config=config)
-
-    # Plot the template of all tasks and save as HTML
-    file_output = f"{config["dir_output"]}/tasks_template.html"
-    plan_report.plot_tasks_template(file_html=file_output)
-    logger.info(f"Task template visualized in '{file_output}'.")
-
-    # Plot the source-product dependency graph and save as HTML
-    file_output = f"{config["dir_output"]}/source_products.html"
-    plan_report.plot_source_products(file_html=file_output)
-    logger.info(f"Source product combinations visualized in '{file_output}'.")
-
-    # Plot the full source-product-task dependency graph and save as HTML
-    file_output = f"{config["dir_output"]}/all.html"
-    plan_report.plot_source_product_tasks(file_html=file_output)
-    logger.info(f"Source product combinations visualized in '{file_output}'.")
-
-    # Plot the full graph with task statuses and save as HTML
-    file_output = f"{config["dir_output"]}/all_task_status.html"
-    plan_report.plot_graph_total_status(file_html=file_output)
-    logger.info(f"All tasks with their status visualized in '{file_output}'.")
-
-    # Plot the status graph for a specific product and save as HTML
-    file_output = f"{config["dir_output"]}/product.html"
-    plan_report.plot_graph_product_status(id_product=config["inspect_product"], file_html=file_output)
-    logger.info(f"Product task flow for product {config["inspect_product"]} visualized in '{file_output}'.")
-
-    # Export all tasks to an Excel file
-    file_output = f"{config["dir_output"]}/tasks.xlsx"
-    plan_report.export_tasks(file_xlsx=file_output)
-    logger.info(f"Tasks exported to '{file_output}'.")
-
-    # Start dashboard
-    app = Dashboard(df_tasks_status=plan_report.get_tasks())
-    app.start()
+    _generate_reports(plan_report=plan_report, config=config)
+    _start_dashboard(plan_report=plan_report)
 
 if __name__ == "__main__":
     main()
